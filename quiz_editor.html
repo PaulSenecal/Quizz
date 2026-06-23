@@ -588,6 +588,151 @@ header .badge {
   pointer-events: none;
 }
 .cat-select-wrap .form-select { padding-left: 32px; }
+
+/* ═══════════════ CAT MANAGER MODAL ═══════════════ */
+#cat-modal {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.75);
+  z-index: 500;
+  align-items: center;
+  justify-content: center;
+}
+#cat-modal.show { display: flex; }
+
+.cat-modal-box {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 28px 30px;
+  width: 480px;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.6);
+}
+
+.cat-modal-box h2 {
+  font-family: 'Syne', sans-serif;
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--text);
+}
+
+.cat-list-manage {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.cat-manage-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  background: var(--surface2);
+  border-radius: 8px;
+  border: 1px solid var(--border);
+}
+
+.cat-color-swatch {
+  width: 28px; height: 28px;
+  border-radius: 6px;
+  flex-shrink: 0;
+  cursor: pointer;
+  border: 2px solid rgba(255,255,255,0.15);
+  position: relative;
+  overflow: hidden;
+}
+.cat-color-swatch input[type=color] {
+  position: absolute;
+  inset: -4px;
+  width: calc(100% + 8px);
+  height: calc(100% + 8px);
+  opacity: 0;
+  cursor: pointer;
+  border: none;
+}
+
+.cat-label-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  color: var(--text);
+  font-family: 'Syne', sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  outline: none;
+  text-transform: uppercase;
+  min-width: 0;
+}
+.cat-label-input::placeholder { color: var(--text-dim); text-transform: none; }
+
+.cat-del-btn {
+  width: 26px; height: 26px;
+  border-radius: 5px;
+  border: none;
+  background: transparent;
+  color: #ef4444;
+  cursor: pointer;
+  font-size: 15px;
+  display: flex; align-items: center; justify-content: center;
+  opacity: 0.5;
+  flex-shrink: 0;
+  transition: opacity 0.12s;
+}
+.cat-del-btn:hover { opacity: 1; }
+
+.cat-add-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  padding-top: 4px;
+  border-top: 1px solid var(--border);
+}
+
+.new-cat-color {
+  width: 34px; height: 34px;
+  border-radius: 8px;
+  flex-shrink: 0;
+  cursor: pointer;
+  border: 2px solid rgba(255,255,255,0.2);
+  position: relative;
+  overflow: hidden;
+}
+.new-cat-color input[type=color] {
+  position: absolute;
+  inset: -4px;
+  width: calc(100% + 8px);
+  height: calc(100% + 8px);
+  opacity: 0;
+  cursor: pointer;
+}
+
+.new-cat-name {
+  flex: 1;
+  background: var(--surface2);
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  color: var(--text);
+  font-family: 'Syne', sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  padding: 8px 12px;
+  outline: none;
+  text-transform: uppercase;
+  transition: border-color 0.15s;
+}
+.new-cat-name:focus { border-color: var(--accent); }
+.new-cat-name::placeholder { font-weight: 400; text-transform: none; letter-spacing: 0; }
 </style>
 </head>
 <body>
@@ -599,6 +744,7 @@ header .badge {
     <div class="header-right">
       <button class="btn btn-secondary btn-sm" onclick="importJSON()">📂 Charger JSON</button>
       <button class="btn btn-secondary btn-sm" onclick="exportJSON()">💾 Sauvegarder JSON</button>
+      <button class="btn btn-secondary btn-sm" onclick="openCatManager()">🏷 Sujets</button>
       <button class="btn btn-primary btn-sm" onclick="openPrint()">🖨 Générer PDF</button>
     </div>
   </header>
@@ -628,6 +774,24 @@ header .badge {
   </div>
 </div>
 
+<!-- CAT MANAGER MODAL -->
+<div id="cat-modal">
+  <div class="cat-modal-box">
+    <div style="display:flex;align-items:center;justify-content:space-between">
+      <h2>🏷 Gérer les sujets</h2>
+      <button class="btn btn-secondary btn-sm" onclick="closeCatManager()">✕ Fermer</button>
+    </div>
+    <div class="cat-list-manage" id="cat-list-manage"></div>
+    <div class="cat-add-row">
+      <div class="new-cat-color" id="new-cat-color-swatch" style="background:#4f6ef7">
+        <input type="color" id="new-cat-color" value="#4f6ef7" oninput="document.getElementById('new-cat-color-swatch').style.background=this.value">
+      </div>
+      <input class="new-cat-name" type="text" id="new-cat-name" placeholder="Nom du nouveau sujet…" maxlength="24" onkeydown="if(event.key==='Enter')addCategory()">
+      <button class="btn btn-primary btn-sm" onclick="addCategory()">+ Ajouter</button>
+    </div>
+  </div>
+</div>
+
 <!-- PRINT OVERLAY -->
 <div id="print-overlay">
   <div class="print-toolbar">
@@ -646,17 +810,35 @@ header .badge {
 // ═══════════════════════════════════════════
 // CONFIG CATÉGORIES
 // ═══════════════════════════════════════════
-const CATEGORIES = [
-  { id: 'sit',      label: 'SIT',       color: '#1D3461', light: '#e8eef8' },
-  { id: 'imf',      label: 'IMF',       color: '#912A21', light: '#e8eef8' },
-  { id: 'istc',     label: 'ISTC',      color: '#7B1D3A', light: '#f8e8ee' },
-  { id: 'nrbc',     label: 'NRBC',      color: '#2D5016', light: '#eaf4e3' },
-  { id: 'armement', label: 'ARMEMENT',  color: '#3D3D4E', light: '#ededf2' },
-  { id: 'rens',     label: 'RENS',      color: '#3D1A6E', light: '#ede8f8' },
-  { id: 'topo',     label: 'TOPO',      color: '#5C3317', light: '#f5ece5' },
-  { id: 'trans',    label: 'TRANS',     color: '#8B3A00', light: '#f8ede5' },
-  { id: 'cyber',    label: 'CYBER SÉCU',color: '#004D2C', light: '#e3f4ec' },
+// ═══════════════════════════════════════════
+// CONFIG CATÉGORIES (dynamique)
+// ═══════════════════════════════════════════
+const DEFAULT_CATEGORIES = [
+  { id: 'sit',      label: 'SIT',       color: '#1D3461' },
+  { id: 'imf',      label: 'IMF',       color: '#912A21' },
+  { id: 'istc',     label: 'ISTC',      color: '#7B1D3A' },
+  { id: 'nrbc',     label: 'NRBC',      color: '#2D5016' },
+  { id: 'armement', label: 'ARMEMENT',  color: '#3D3D4E' },
+  { id: 'rens',     label: 'RENS',      color: '#3D1A6E' },
+  { id: 'topo',     label: 'TOPO',      color: '#5C3317' },
+  { id: 'trans',    label: 'TRANS',     color: '#8B3A00' },
+  { id: 'cyber',    label: 'CYBER SÉCU',color: '#004D2C' },
 ];
+
+let CATEGORIES = [];
+
+function loadCategories() {
+  const raw = localStorage.getItem('quiz_categories');
+  if (raw) {
+    try { CATEGORIES = JSON.parse(raw); return; } catch(e) {}
+  }
+  CATEGORIES = DEFAULT_CATEGORIES.map(c => ({ ...c }));
+  saveCategories();
+}
+
+function saveCategories() {
+  localStorage.setItem('quiz_categories', JSON.stringify(CATEGORIES));
+}
 
 const LETTERS = ['A','B','C','D','E','F'];
 
@@ -674,6 +856,7 @@ function nextId() { return 'q_' + Date.now() + '_' + Math.random().toString(36).
 // INIT
 // ═══════════════════════════════════════════
 function init() {
+  loadCategories();
   renderCatFilter();
   loadFromStorage();
   renderList();
@@ -1064,6 +1247,98 @@ function openPrint() {
 
 function closePrint() {
   document.getElementById('print-overlay').classList.remove('show');
+}
+
+// ═══════════════════════════════════════════
+// CAT MANAGER
+// ═══════════════════════════════════════════
+function openCatManager() {
+  renderCatManagerList();
+  document.getElementById('cat-modal').classList.add('show');
+}
+
+function closeCatManager() {
+  // Sync all edits
+  document.querySelectorAll('.cat-manage-row').forEach(row => {
+    const id = row.dataset.catId;
+    const cat = CATEGORIES.find(c => c.id === id);
+    if (!cat) return;
+    const labelInp = row.querySelector('.cat-label-input');
+    if (labelInp) cat.label = labelInp.value.toUpperCase().trim() || cat.label;
+  });
+  saveCategories();
+  renderCatFilter();
+  // Refresh editor if open (dropdown options change)
+  if (activeId) renderEditor();
+  document.getElementById('cat-modal').classList.remove('show');
+}
+
+function renderCatManagerList() {
+  const el = document.getElementById('cat-list-manage');
+  el.innerHTML = CATEGORIES.map(c => `
+    <div class="cat-manage-row" data-cat-id="${c.id}">
+      <div class="cat-color-swatch" style="background:${c.color}" title="Changer la couleur">
+        <input type="color" value="${c.color}"
+          oninput="updateCatColor('${c.id}', this.value, this.parentElement)">
+      </div>
+      <input class="cat-label-input" type="text" value="${escHtml(c.label)}" maxlength="20"
+        placeholder="Nom du sujet"
+        oninput="updateCatLabel('${c.id}', this.value)">
+      <button class="cat-del-btn" onclick="deleteCategory('${c.id}')" title="Supprimer">×</button>
+    </div>
+  `).join('');
+}
+
+function updateCatColor(id, color, swatchEl) {
+  const cat = CATEGORIES.find(c => c.id === id);
+  if (cat) { cat.color = color; swatchEl.style.background = color; }
+}
+
+function updateCatLabel(id, val) {
+  const cat = CATEGORIES.find(c => c.id === id);
+  if (cat) cat.label = val.toUpperCase().trim() || cat.label;
+}
+
+function deleteCategory(id) {
+  const usedBy = questions.filter(q => q.category === id);
+  if (usedBy.length > 0) {
+    if (!confirm(`Ce sujet est utilisé par ${usedBy.length} question(s). Supprimer quand même ?\n(Les questions seront réassignées au premier sujet)`)) return;
+    const fallback = CATEGORIES.find(c => c.id !== id);
+    if (fallback) usedBy.forEach(q => q.category = fallback.id);
+    saveToStorage();
+  }
+  CATEGORIES = CATEGORIES.filter(c => c.id !== id);
+  saveCategories();
+  renderCatManagerList();
+}
+
+function addCategory() {
+  const nameInp = document.getElementById('new-cat-name');
+  const colorInp = document.getElementById('new-cat-color');
+  const name = nameInp.value.trim().toUpperCase();
+  if (!name) { nameInp.focus(); return; }
+  const newCat = {
+    id: 'cat_' + Date.now(),
+    label: name,
+    color: colorInp.value
+  };
+  CATEGORIES.push(newCat);
+  saveCategories();
+  nameInp.value = '';
+  // Pick a new random-ish color for next
+  const hue = Math.floor(Math.random() * 360);
+  const nextColor = hslToHex(hue, 55, 30);
+  colorInp.value = nextColor;
+  document.getElementById('new-cat-color-swatch').style.background = nextColor;
+  renderCatManagerList();
+  toast('Sujet "' + name + '" créé !');
+}
+
+function hslToHex(h, s, l) {
+  s /= 100; l /= 100;
+  const a = s * Math.min(l, 1 - l);
+  const f = n => { const k = (n + h / 30) % 12; const c = l - a * Math.max(Math.min(k - 3, 9 - k, 1), -1); return Math.round(255 * c).toString(16).padStart(2, '0'); };
+  return `#${f(0)}${f(8)}${f(4)}`;
 }
 
 // ═══════════════════════════════════════════
